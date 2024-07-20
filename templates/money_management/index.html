@@ -7,9 +7,9 @@
     {% if user.is_authenticated %}
         <h2>Транзакции</h2>
 
-        <form method="GET" action="{% url 'index' %}" class="form-inline">
+        <form method="GET" action="{% url 'index' %}" class="form-inline" style="float: right; margin-bottom: 10px;">
             <div class="form-group">
-                <label for="currency">Выберите валюту:</label>
+                <label for="currency">Валюта:</label>
                 <select name="currency" class="form-control ml-2" id="currency" onchange="this.form.submit()">
                     {% for code, name in currency_choices %}
                         <option value="{{ code }}" {% if target_currency == code %}selected{% endif %}>{{ name }} ({{ code }})</option>
@@ -17,6 +17,8 @@
                 </select>
             </div>
         </form>
+
+        <div style="clear: both;"></div>
 
         <a href="{% url 'add_account' %}" class="btn btn-primary mt-3" data-toggle="modal" data-target="#addAccountModal">Добавить аккаунт</a>
         <a href="{% url 'add_transaction' %}" class="btn btn-primary mt-3">Добавить транзакцию</a>

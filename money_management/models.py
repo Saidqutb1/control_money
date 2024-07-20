@@ -6,7 +6,7 @@ User = get_user_model()
 class Account(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
-    balance = models.DecimalField(max_digits=10, decimal_places=2)
+    balance = models.DecimalField(max_digits=30, decimal_places=2)
 
     def __str__(self):
         return self.name
@@ -19,12 +19,12 @@ class Transaction(models.Model):
 
     account = models.ForeignKey(Account, on_delete=models.CASCADE)
     type = models.CharField(max_length=10, choices=ACCOUNT_TYPES)
-    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    amount = models.DecimalField(max_digits=30, decimal_places=2)
     category = models.CharField(max_length=100)
     date = models.DateField()
     note = models.TextField(blank=True, null=True)
-    previous_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    current_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    previous_balance = models.DecimalField(max_digits=30, decimal_places=2, default=0)
+    current_balance = models.DecimalField(max_digits=30, decimal_places=2, default=0)
 
     def save(self, *args, **kwargs):
         self.previous_balance = self.account.balance

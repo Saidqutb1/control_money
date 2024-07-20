@@ -1,8 +1,23 @@
-# views.py
 from django.shortcuts import render, redirect
 from .forms import TransactionForm, AccountForm
 from .models import Transaction
 from .utils import convert_currency
+from .forms import CURRENCY_CHOICES
+from concurrent.futures import ThreadPoolExecutor
+
+def convert_transaction(transaction, target_currency):
+    converted_amount = convert_currency(transaction.amount, 'USD', target_currency)
+    return {
+        'account': transaction.account,
+        'type': transaction.get_type_display(),
+        'previous_balance': convert_currency(transaction.previous_balance, 'USD', target_currency),
+        'amount': converted_amount,
+        'current_balance': convert_currency(transaction.current_balance, 'USD', target_currency),
+        'category': transaction.category,
+        'date': transaction.date,
+        'note': transaction.note,
+        'currency': target_currency
+    }
 
 def add_transaction(request):
     if request.method == 'POST':
@@ -34,22 +49,10 @@ def add_account(request):
 def index(request):
     transactions = Transaction.objects.all()
     account_form = AccountForm()
-    return render(request, 'money_management/index.html', {'transactions': transactions, 'account_form': account_form})
+    target_currency = request.GET.get('currency', 'USD')
 
-    converted_transactions = []
-    for transaction in transactions:
-        converted_amount = convert_currency(transaction.amount, 'USD', target_currency)
-        converted_transactions.append({
-            'account': transaction.account,
-            'type': transaction.get_type_display(),
-            'previous_balance': convert_currency(transaction.previous_balance, 'USD', target_currency),
-            'amount': converted_amount,
-            'current_balance': convert_currency(transaction.current_balance, 'USD', target_currency),
-            'category': transaction.category,
-            'date': transaction.date,
-            'note': transaction.note,
-            'currency': target_currency
-        })
+    with ThreadPoolExecutor() as executor:
+        converted_transactions = list(executor.map(lambda t: convert_transaction(t, target_currency), transactions))
 
     return render(request, 'money_management/index.html', {
         'transactions': converted_transactions,

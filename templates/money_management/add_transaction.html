@@ -1,18 +1,18 @@
 {% load crispy_forms_tags %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Add Transaction</title>
+    <title>Добавить транзакцию</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css">
 </head>
 <body>
 <div class="container">
-    <h2>Add Transaction</h2>
+    <h2>Добавить транзакцию</h2>
     <form method="POST">
         {% csrf_token %}
         {{ form|crispy }}
-        <button type="submit" class="btn btn-primary">Add</button>
+        <button type="submit" class="btn btn-primary">Добавить</button>
     </form>
 </div>
 </body>

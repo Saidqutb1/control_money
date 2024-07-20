@@ -1,38 +1,59 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Transactions</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css">
-</head>
-<body>
-<div class="container">
-    <h2>Transactions</h2>
-    <a href="{% url 'add_transaction' %}" class="btn btn-primary">Add Transaction</a>
-    <table class="table mt-4">
-        <thead>
-            <tr>
-                <th>Account</th>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Category</th>
-                <th>Date</th>
-                <th>Note</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for transaction in transactions %}
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Транзакции{% endblock %}
+
+{% block content %}
+    {% if user.is_authenticated %}
+        <h2>Транзакции</h2>
+        <a href="{% url 'add_account' %}" class="btn btn-primary" data-toggle="modal" data-target="#addAccountModal">Добавить аккаунт</a>
+        <a href="{% url 'add_transaction' %}" class="btn btn-primary">Добавить транзакцию</a>
+        <table class="table mt-4">
+            <thead>
                 <tr>
-                    <td>{{ transaction.account.name }}</td>
-                    <td>{{ transaction.get_type_display }}</td>
-                    <td>{{ transaction.amount }}</td>
-                    <td>{{ transaction.category }}</td>
-                    <td>{{ transaction.date }}</td>
-                    <td>{{ transaction.note }}</td>
+                    <th>Аккаунт</th>
+                    <th>Тип</th>
+                    <th>Сумма</th>
+                    <th>Категория</th>
+                    <th>Дата</th>
+                    <th>Примечание</th>
                 </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-</body>
-</html>
+            </thead>
+            <tbody>
+                {% for transaction in transactions %}
+                    <tr>
+                        <td>{{ transaction.account.name }}</td>
+                        <td>{{ transaction.get_type_display }}</td>
+                        <td>{{ transaction.amount }}</td>
+                        <td>{{ transaction.category }}</td>
+                        <td>{{ transaction.date }}</td>
+                        <td>{{ transaction.note }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Add Account Modal -->
+        <div class="modal fade" id="addAccountModal" tabindex="-1" aria-labelledby="addAccountModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addAccountModalLabel">Добавить аккаунт</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="POST" action="{% url 'add_account' %}">
+                            {% csrf_token %}
+                            {{ account_form|crispy }}
+                            <button type="submit" class="btn btn-primary">Добавить аккаунт</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <h2>Пожалуйста, войдите или зарегистрируйтесь</h2>
+    {% endif %}
+{% endblock %}

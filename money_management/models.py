@@ -11,7 +11,6 @@ class Account(models.Model):
     def __str__(self):
         return self.name
 
-
 class Transaction(models.Model):
     ACCOUNT_TYPES = [
         ('income', 'Income'),

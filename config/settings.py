@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap5',
     'custom_auth',
     'money_management',
+    'landing_page',
 ]
 
 MIDDLEWARE = [

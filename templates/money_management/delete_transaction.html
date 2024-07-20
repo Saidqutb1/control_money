@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Удалить транзакцию{% endblock %}
+
+{% block content %}
+    <div class="container">
+        <h2>Вы уверены, что хотите удалить эту транзакцию?</h2>
+        <p>Аккаунт: {{ transaction.account.name }}</p>
+        <p>Тип: {{ transaction.type }}</p>
+        <p>Сумма: {{ transaction.amount }}</p>
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">Удалить</button>
+            <a href="{% url 'money_management:index' %}" class="btn btn-secondary">Отмена</a>
+        </form>
+    </div>
+{% endblock %}

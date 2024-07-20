@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from .forms import TransactionForm, AccountForm
 from .models import Transaction
 from .utils import convert_currency
@@ -8,6 +8,7 @@ from concurrent.futures import ThreadPoolExecutor
 def convert_transaction(transaction, target_currency):
     converted_amount = convert_currency(transaction.amount, 'USD', target_currency)
     return {
+        'id': transaction.id,  # Добавляем id
         'account': transaction.account,
         'type': transaction.get_type_display(),
         'previous_balance': convert_currency(transaction.previous_balance, 'USD', target_currency),
@@ -29,7 +30,7 @@ def add_transaction(request):
             if currency != 'USD':
                 transaction.amount = convert_currency(amount, currency, 'USD')
             transaction.save()
-            return redirect('index')
+            return redirect('money_management:index')
     else:
         form = TransactionForm()
     return render(request, 'money_management/add_transaction.html', {'form': form})
@@ -41,10 +42,28 @@ def add_account(request):
             account = form.save(commit=False)
             account.user = request.user
             account.save()
-            return redirect('index')
+            return redirect('money_management:index')
     else:
         form = AccountForm()
     return render(request, 'money_management/add_account.html', {'form': form})
+
+def update_transaction(request, pk):
+    transaction = get_object_or_404(Transaction, pk=pk)
+    if request.method == 'POST':
+        form = TransactionForm(request.POST, instance=transaction)
+        if form.is_valid():
+            form.save()
+            return redirect('money_management:index')
+    else:
+        form = TransactionForm(instance=transaction)
+    return render(request, 'money_management/update_transaction.html', {'form': form})
+
+def delete_transaction(request, pk):
+    transaction = get_object_or_404(Transaction, pk=pk)
+    if request.method == 'POST':
+        transaction.delete()
+        return redirect('money_management:index')
+    return render(request, 'money_management/delete_transaction.html', {'transaction': transaction})
 
 def index(request):
     transactions = Transaction.objects.all()

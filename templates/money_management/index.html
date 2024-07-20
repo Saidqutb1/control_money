@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Transactions</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css">
+</head>
+<body>
+<div class="container">
+    <h2>Transactions</h2>
+    <a href="{% url 'add_transaction' %}" class="btn btn-primary">Add Transaction</a>
+    <table class="table mt-4">
+        <thead>
+            <tr>
+                <th>Account</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Category</th>
+                <th>Date</th>
+                <th>Note</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transaction in transactions %}
+                <tr>
+                    <td>{{ transaction.account.name }}</td>
+                    <td>{{ transaction.get_type_display }}</td>
+                    <td>{{ transaction.amount }}</td>
+                    <td>{{ transaction.category }}</td>
+                    <td>{{ transaction.date }}</td>
+                    <td>{{ transaction.note }}</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+</body>
+</html>

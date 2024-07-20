@@ -6,16 +6,30 @@
 {% block content %}
     {% if user.is_authenticated %}
         <h2>Транзакции</h2>
-        <a href="{% url 'add_account' %}" class="btn btn-primary" data-toggle="modal" data-target="#addAccountModal">Добавить аккаунт</a>
-        <a href="{% url 'add_transaction' %}" class="btn btn-primary">Добавить транзакцию</a>
+
+        <form method="GET" action="{% url 'index' %}" class="form-inline">
+            <div class="form-group">
+                <label for="currency">Выберите валюту:</label>
+                <select name="currency" class="form-control ml-2" id="currency" onchange="this.form.submit()">
+                    {% for code, name in currency_choices %}
+                        <option value="{{ code }}" {% if target_currency == code %}selected{% endif %}>{{ name }} ({{ code }})</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+
+        <a href="{% url 'add_account' %}" class="btn btn-primary mt-3" data-toggle="modal" data-target="#addAccountModal">Добавить аккаунт</a>
+        <a href="{% url 'add_transaction' %}" class="btn btn-primary mt-3">Добавить транзакцию</a>
+
         <table class="table mt-4">
             <thead>
                 <tr>
                     <th>Аккаунт</th>
                     <th>Тип</th>
+                    <th>Прошлый баланс</th>
                     <th>Сумма</th>
+                    <th>Нынешний баланс</th>
                     <th>Категория</th>
-                    <th>Дата</th>
                     <th>Примечание</th>
                 </tr>
             </thead>
@@ -23,17 +37,17 @@
                 {% for transaction in transactions %}
                     <tr>
                         <td>{{ transaction.account.name }}</td>
-                        <td>{{ transaction.get_type_display }}</td>
-                        <td>{{ transaction.amount }}</td>
+                        <td>{{ transaction.type }}</td>
+                        <td>{{ transaction.previous_balance }} {{ target_currency }}</td>
+                        <td>{{ transaction.amount }} {{ target_currency }}</td>
+                        <td>{{ transaction.current_balance }} {{ target_currency }}</td>
                         <td>{{ transaction.category }}</td>
-                        <td>{{ transaction.date }}</td>
                         <td>{{ transaction.note }}</td>
                     </tr>
                 {% endfor %}
             </tbody>
         </table>
 
-        <!-- Add Account Modal -->
         <div class="modal fade" id="addAccountModal" tabindex="-1" aria-labelledby="addAccountModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">

@@ -23,6 +23,18 @@ class Transaction(models.Model):
     category = models.CharField(max_length=100)
     date = models.DateField()
     note = models.TextField(blank=True, null=True)
+    previous_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    current_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+
+    def save(self, *args, **kwargs):
+        self.previous_balance = self.account.balance
+        if self.type == 'income':
+            self.account.balance += self.amount
+        else:
+            self.account.balance -= self.amount
+        self.current_balance = self.account.balance
+        self.account.save()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.account.name} - {self.type} - {self.amount}'

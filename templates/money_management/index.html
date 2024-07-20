@@ -33,6 +33,7 @@
                     <th>Нынешний баланс</th>
                     <th>Категория</th>
                     <th>Примечание</th>
+                    <th>Дата и время</th>
                     <th>Действия</th>
                 </tr>
             </thead>
@@ -47,10 +48,17 @@
                         <td>{{ transaction.category }}</td>
                         <td>{{ transaction.note }}</td>
                         <td>
-                            <a href="{% url 'money_management:update_transaction' transaction.id %}" class="btn btn-sm btn-primary">
+                            {% if transaction.updated_at %}
+                                {{ transaction.created_at }} (обновлено: {{ transaction.updated_at }})
+                            {% else %}
+                                {{ transaction.created_at }}
+                            {% endif %}
+                        </td>
+                        <td>
+                            <a href="{% url 'money_management:update_transaction' pk=transaction.id %}" class="btn btn-sm btn-primary">
                                 <i class="fas fa-pencil-alt"></i>
                             </a>
-                            <a href="{% url 'money_management:delete_transaction' transaction.id %}" class="btn btn-sm btn-danger">
+                            <a href="{% url 'money_management:delete_transaction' pk=transaction.id %}" class="btn btn-sm btn-danger">
                                 <i class="fas fa-trash"></i>
                             </a>
                         </td>

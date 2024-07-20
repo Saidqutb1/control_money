@@ -25,6 +25,8 @@ class Transaction(models.Model):
     note = models.TextField(blank=True, null=True)
     previous_balance = models.DecimalField(max_digits=30, decimal_places=2, default=0)
     current_balance = models.DecimalField(max_digits=30, decimal_places=2, default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     def save(self, *args, **kwargs):
         self.previous_balance = self.account.balance

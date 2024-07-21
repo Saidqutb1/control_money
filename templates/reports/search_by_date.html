@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}Найти отчеты по дате{% endblock %}
+
+{% block content %}
+<h2>Найти отчеты по дате</h2>
+<form method="POST" action="{% url 'search_by_date' %}">
+    {% csrf_token %}
+    <div class="form-group">
+        <label for="date">Выберите дату:</label>
+        <input type="date" class="form-control" id="date" name="date" required>
+        <input type="hidden" name="next" value="{{ request.path }}">
+    </div>
+    <button type="submit" class="btn btn-primary">Найти</button>
+</form>
+{% if error %}
+    <div class="alert alert-danger mt-3">{{ error }}</div>
+{% endif %}
+{% endblock %}

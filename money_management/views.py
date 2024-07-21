@@ -1,3 +1,4 @@
+from datetime import timezone, datetime
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import TransactionForm, AccountForm
 from .models import Transaction
@@ -8,7 +9,7 @@ from concurrent.futures import ThreadPoolExecutor
 def convert_transaction(transaction, target_currency):
     converted_amount = convert_currency(transaction.amount, 'USD', target_currency)
     return {
-        'id': transaction.id,  # Добавляем id
+        'id': transaction.id,
         'account': transaction.account,
         'type': transaction.get_type_display(),
         'previous_balance': convert_currency(transaction.previous_balance, 'USD', target_currency),
@@ -20,7 +21,10 @@ def convert_transaction(transaction, target_currency):
         'currency': target_currency
     }
 
+
 def add_transaction(request):
+    date_str = request.GET.get('date', '')
+    next_url = request.GET.get('next', 'money_management:index')
     if request.method == 'POST':
         form = TransactionForm(request.POST)
         if form.is_valid():
@@ -30,22 +34,23 @@ def add_transaction(request):
             if currency != 'USD':
                 transaction.amount = convert_currency(amount, currency, 'USD')
             transaction.save()
-            return redirect('money_management:index')
+            return redirect(next_url)
     else:
-        form = TransactionForm()
-    return render(request, 'money_management/add_transaction.html', {'form': form})
+        form = TransactionForm(initial={'date': date_str})
+    return render(request, 'money_management/add_transaction.html', {'form': form, 'next': next_url})
 
 def add_account(request):
+    next_url = request.GET.get('next', 'money_management:index')
     if request.method == 'POST':
         form = AccountForm(request.POST)
         if form.is_valid():
             account = form.save(commit=False)
             account.user = request.user
             account.save()
-            return redirect('money_management:index')
+            return redirect(next_url)
     else:
         form = AccountForm()
-    return render(request, 'money_management/add_account.html', {'form': form})
+    return render(request, 'money_management/add_account.html', {'form': form, 'next': next_url})
 
 def update_transaction(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk)

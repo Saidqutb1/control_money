@@ -182,3 +182,5 @@ class AccountForm(forms.ModelForm):
             'name': forms.TextInput(attrs={'class': 'form-control'}),
             'balance': forms.NumberInput(attrs={'class': 'form-control'}),
         }
+
+

@@ -4,13 +4,14 @@ from django.db.models import Sum
 from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import TransactionForm, AccountForm
-from .models import Transaction
+from .models import Transaction, Account
 from .utils import convert_currency
 from .forms import CURRENCY_CHOICES
 from concurrent.futures import ThreadPoolExecutor
 from django.core.paginator import Paginator
 from django.http import JsonResponse
 
+logger = logging.getLogger(__name__)
 def convert_transaction(transaction, target_currency):
     converted_amount = convert_currency(transaction.amount, 'USD', target_currency)
     formatted_date = transaction.date.strftime('%B %d, %Y, %I:%M %p')
@@ -88,14 +89,25 @@ def index(request):
         page_obj = paginator.get_page(page_number)
         account_form = AccountForm()
         target_currency = request.GET.get('currency', 'USD')
+        account_id = request.GET.get('account', None)
+        chart_type = request.GET.get('chart_type', 'line')
+
+        if account_id:
+            transactions = transactions.filter(account_id=account_id)
 
         with ThreadPoolExecutor() as executor:
             converted_transactions = list(executor.map(lambda t: convert_transaction(t, target_currency), page_obj))
 
-        daily_totals = transactions.extra({'date_created': "DATE(created_at)"}).values('date_created').annotate(total_amount=Sum('amount')).order_by('date_created')
+        date_field = 'date_created'
+        daily_totals = transactions.extra({'date_created': "DATE(created_at)"}).values(date_field).annotate(total_amount=Sum('amount')).order_by(date_field)
+        income_totals = transactions.filter(type='Income').extra({'date_created': "DATE(created_at)"}).values(date_field).annotate(total_amount=Sum('amount')).order_by(date_field)
+        expense_totals = transactions.filter(type='Expense').extra({'date_created': "DATE(created_at)"}).values(date_field).annotate(total_amount=Sum('amount')).order_by(date_field)
+
         chart_data = {
-            'labels': [str(item['date_created']) for item in daily_totals],
-            'data': [float(item['total_amount']) for item in daily_totals]  # Преобразование Decimal в float
+            'labels': [str(item[date_field]) for item in daily_totals],
+            'total': [float(item['total_amount']) for item in daily_totals],
+            'income': [float(item['total_amount']) for item in income_totals],
+            'expense': [float(item['total_amount']) for item in expense_totals],
         }
 
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
@@ -111,7 +123,10 @@ def index(request):
             'target_currency': target_currency,
             'currency_choices': CURRENCY_CHOICES,
             'page_obj': page_obj,
-            'chart_data': json.dumps(chart_data)
+            'chart_data': json.dumps(chart_data),
+            'chart_type': chart_type,
+            'account_id': account_id,
+            'accounts': Account.objects.all(),
         })
 
     except Exception as e:

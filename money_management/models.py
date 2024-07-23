@@ -11,6 +11,12 @@ class Account(models.Model):
     def __str__(self):
         return self.name
 
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+        }
+
 class Transaction(models.Model):
     ACCOUNT_TYPES = [
         ('income', 'Income'),

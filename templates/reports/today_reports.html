@@ -58,4 +58,10 @@
         {% endfor %}
     </tbody>
 </table>
+
+{% if page_obj.has_next %}
+    <div class="text-center">
+        <a href="?page={{ page_obj.next_page_number }}" class="btn btn-secondary">Ещё</a>
+    </div>
+{% endif %}
 {% endblock %}

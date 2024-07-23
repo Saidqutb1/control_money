@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+{% block title %}Поиск транзакций{% endblock %}
+
+{% block content %}
+<h2>Поиск транзакций</h2>
+
+<form method="GET" action="{% url 'search_transactions' %}" class="mb-4">
+    <div class="form-group">
+        {{ form.account|as_crispy_field }}
+    </div>
+    <div class="form-group">
+        {{ form.type|as_crispy_field }}
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            {{ form.min_amount|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-6">
+            {{ form.max_amount|as_crispy_field }}
+        </div>
+    </div>
+    <div class="form-row">
+        <div class="form-group col-md-6">
+            {{ form.start_date|as_crispy_field }}
+        </div>
+        <div class="form-group col-md-6">
+            {{ form.end_date|as_crispy_field }}
+        </div>
+    </div>
+    <div class="form-group">
+        {{ form.category|as_crispy_field }}
+    </div>
+    <button type="submit" class="btn btn-primary">Поиск</button>
+</form>
+
+{% if transactions %}
+    <table class="table mt-4">
+        <thead>
+            <tr>
+                <th>Аккаунт</th>
+                <th>Тип</th>
+                <th>Прошлый баланс</th>
+                <th>Сумма</th>
+                <th>Нынешний баланс</th>
+                <th>Категория</th>
+                <th>Примечание</th>
+                <th>Дата и время</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for transaction in transactions %}
+                <tr>
+                    <td>{{ transaction.account.name }}</td>
+                    <td>{{ transaction.type }}</td>
+                    <td>{{ transaction.previous_balance }}</td>
+                    <td>{{ transaction.amount }}</td>
+                    <td>{{ transaction.current_balance }}</td>
+                    <td>{{ transaction.category }}</td>
+                    <td>{{ transaction.note }}</td>
+                    <td>{{ transaction.created_at }}</td>
+                    <td>
+                        <a href="{% url 'money_management:update_transaction' pk=transaction.id %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-pencil-alt"></i>
+                        </a>
+                        <a href="{% url 'money_management:delete_transaction' pk=transaction.id %}" class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+{% else %}
+    <p>Нет транзакций, соответствующих критериям поиска.</p>
+{% endif %}
+{% endblock %}

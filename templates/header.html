@@ -8,14 +8,15 @@
     <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ml-auto">
             <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" href="#" id="reportsDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                    Периоды
+                <a class="nav-link dropdown-toggle" href="#" id="periodDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Поиск
                 </a>
-                <div class="dropdown-menu" aria-labelledby="reportsDropdown">
+                <div class="dropdown-menu" aria-labelledby="periodDropdown">
                     <a class="dropdown-item" href="{% url 'today_reports' %}">Сегодняшние</a>
                     <a class="dropdown-item" href="{% url 'month_reports' %}">Этот месяц</a>
                     <a class="dropdown-item" href="{% url 'year_reports' %}">Этот год</a>
-                    <a class="dropdown-item" href="{% url 'search_by_date' %}">Найти день</a>
+                    <a class="dropdown-item" href="{% url 'search_by_date' %}">Найти день на календаре</a>
+                    <a class="dropdown-item" href="{% url 'search_transactions' %}">Поиск транзакций</a>
                 </div>
             </li>
             {% if user.is_authenticated %}

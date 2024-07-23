@@ -1,16 +1,20 @@
-from datetime import timezone, datetime
+import logging
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import TransactionForm, AccountForm
 from .models import Transaction
 from .utils import convert_currency
 from .forms import CURRENCY_CHOICES
 from concurrent.futures import ThreadPoolExecutor
+from django.core.paginator import Paginator
+from django.http import JsonResponse
 
 def convert_transaction(transaction, target_currency):
     converted_amount = convert_currency(transaction.amount, 'USD', target_currency)
+    formatted_date = transaction.date.strftime('%B %d, %Y, %I:%M %p')
+    formatted_created_at = transaction.created_at.strftime('%B %d, %Y, %I:%M %p')
     return {
         'id': transaction.id,
-        'account': transaction.account,
+        'account': transaction.account.name,
         'type': transaction.get_type_display(),
         'previous_balance': convert_currency(transaction.previous_balance, 'USD', target_currency),
         'amount': converted_amount,
@@ -18,6 +22,7 @@ def convert_transaction(transaction, target_currency):
         'category': transaction.category,
         'date': transaction.date,
         'note': transaction.note,
+        'created_at': formatted_created_at,
         'currency': target_currency
     }
 
@@ -70,17 +75,34 @@ def delete_transaction(request, pk):
         return redirect('money_management:index')
     return render(request, 'money_management/delete_transaction.html', {'transaction': transaction})
 
+logger = logging.getLogger(__name__)
+
 def index(request):
-    transactions = Transaction.objects.all()
-    account_form = AccountForm()
-    target_currency = request.GET.get('currency', 'USD')
+    try:
+        transactions = Transaction.objects.all().order_by('-created_at')
+        paginator = Paginator(transactions, 20)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+        account_form = AccountForm()
+        target_currency = request.GET.get('currency', 'USD')
 
-    with ThreadPoolExecutor() as executor:
-        converted_transactions = list(executor.map(lambda t: convert_transaction(t, target_currency), transactions))
+        with ThreadPoolExecutor() as executor:
+            converted_transactions = list(executor.map(lambda t: convert_transaction(t, target_currency), transactions))
 
-    return render(request, 'money_management/index.html', {
-        'transactions': converted_transactions,
-        'account_form': account_form,
-        'target_currency': target_currency,
-        'currency_choices': CURRENCY_CHOICES
-    })
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return JsonResponse({
+                'transactions': converted_transactions,
+                'has_next': page_obj.has_next()
+            })
+
+        return render(request, 'money_management/index.html', {
+            'transactions': converted_transactions,
+            'account_form': account_form,
+            'target_currency': target_currency,
+            'currency_choices': CURRENCY_CHOICES,
+            'page_obj': page_obj
+        })
+
+    except Exception as e:
+        logger.error(f"Error in index view: {str(e)}", exc_info=True)
+        return JsonResponse({'error': 'Internal Server Error'}, status=500)

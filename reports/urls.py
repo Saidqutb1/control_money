@@ -6,4 +6,5 @@ urlpatterns = [
     path('month/', views.month_reports, name='month_reports'),
     path('year/', views.year_reports, name='year_reports'),
     path('search/', views.search_by_date, name='search_by_date'),
+    path('search/transactions/', views.search_transactions, name='search_transactions'),
 ]

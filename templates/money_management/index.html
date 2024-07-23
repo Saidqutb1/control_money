@@ -67,6 +67,9 @@
             </div>
         {% endif %}
 
+        <h2>График транзакций</h2>
+        <canvas id="transactionChart" width="400" height="200"></canvas>
+
         <div class="modal fade" id="addAccountModal" tabindex="-1" aria-labelledby="addAccountModalLabel" aria-hidden="true">
             <div class="modal-dialog">
                 <div class="modal-content">
@@ -92,6 +95,7 @@
 {% endblock %}
 
 {% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('load-more').addEventListener('click', function() {
@@ -127,7 +131,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     });
 
                     if (response.has_next) {
-                        document.getElementById('load-more').setAttribute('data-next-page', parseInt(nextPage) + 1);
+                        document.getElementById('load-more').setAttribute('data-next-page', response.next_page_number);
                     } else {
                         document.getElementById('load-more').remove();
                     }
@@ -142,6 +146,29 @@ document.addEventListener('DOMContentLoaded', function() {
             console.error('Request failed');
         };
         xhr.send();
+    });
+
+    const ctx = document.getElementById('transactionChart').getContext('2d');
+    const chartData = {{ chart_data|safe }};  // Assuming `chart_data` is passed from the view
+    const transactionChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: chartData.labels,
+            datasets: [{
+                label: 'Транзакции по дням',
+                data: chartData.data,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                borderWidth: 1,
+                fill: false
+            }]
+        },
+        options: {
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
     });
 });
 </script>

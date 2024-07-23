@@ -1,3 +1,4 @@
+import json
 import logging
 from django.db.models import Sum
 from django.utils import timezone
@@ -89,22 +90,19 @@ def index(request):
         target_currency = request.GET.get('currency', 'USD')
 
         with ThreadPoolExecutor() as executor:
-            converted_transactions = list(executor.map(lambda t: convert_transaction(t, target_currency), transactions))
+            converted_transactions = list(executor.map(lambda t: convert_transaction(t, target_currency), page_obj))
 
-        today = timezone.now().date()
-        month_start = today.replace(day=1)
-        transactions_by_day = Transaction.objects.filter(date__gte=month_start).values('date').annotate(total_amount=Sum('amount'))
-
+        daily_totals = transactions.extra({'date_created': "DATE(created_at)"}).values('date_created').annotate(total_amount=Sum('amount')).order_by('date_created')
         chart_data = {
-            'labels': [t['date'].strftime('%Y-%m-%d') for t in transactions_by_day],
-            'data': [float(t['total_amount']) for t in transactions_by_day]
+            'labels': [str(item['date_created']) for item in daily_totals],
+            'data': [float(item['total_amount']) for item in daily_totals]  # Преобразование Decimal в float
         }
 
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({
                 'transactions': converted_transactions,
                 'has_next': page_obj.has_next(),
-                'chart_data': chart_data
+                'next_page_number': page_obj.next_page_number() if page_obj.has_next() else None
             })
 
         return render(request, 'money_management/index.html', {
@@ -112,9 +110,10 @@ def index(request):
             'account_form': account_form,
             'target_currency': target_currency,
             'currency_choices': CURRENCY_CHOICES,
-            'page_obj': page_obj
+            'page_obj': page_obj,
+            'chart_data': json.dumps(chart_data)
         })
 
     except Exception as e:
         logger.error(f"Error in index view: {str(e)}", exc_info=True)
-        return JsonResponse({'error': 'Internal Server Error'}, status=500)
+        return JsonResponse({'error': 'Internal Server Error', 'details': str(e)}, status=500)

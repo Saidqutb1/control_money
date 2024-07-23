@@ -23,4 +23,5 @@ urlpatterns = [
     path('transactions/', include('money_management.urls')),
     path('', include('landing_page.urls')),
     path('reports/', include('reports.urls')),
+    path('budget_planning/', include('budget_planning.urls')),
 ]

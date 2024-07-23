@@ -5,6 +5,7 @@ from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import TransactionForm, AccountForm
 from .models import Transaction, Account
+from budget_planning.models import Budget, Notification
 from .utils import convert_currency
 from .forms import CURRENCY_CHOICES
 from concurrent.futures import ThreadPoolExecutor
@@ -43,6 +44,7 @@ def add_transaction(request):
             if currency != 'USD':
                 transaction.amount = convert_currency(amount, currency, 'USD')
             transaction.save()
+            check_budget(transaction)
             return redirect(next_url)
     else:
         form = TransactionForm(initial={'date': date_str})
@@ -132,3 +134,19 @@ def index(request):
     except Exception as e:
         logger.error(f"Error in index view: {str(e)}", exc_info=True)
         return JsonResponse({'error': 'Internal Server Error', 'details': str(e)}, status=500)
+
+
+def check_budget(transaction):
+    account = transaction.account
+    user = account.user
+    budgets = Budget.objects.filter(user=user, category=transaction.category)
+    if budgets.exists():
+        budget = budgets.first()
+        total_expenses = Transaction.objects.filter(account__user=user, category=transaction.category).aggregate(Sum('amount'))['amount__sum'] or 0
+        if total_expenses + transaction.amount > budget.limit:
+            Notification.create_notification(
+                user=user,
+                message=f'You have exceeded your budget for {transaction.category}.'
+            )
+
+

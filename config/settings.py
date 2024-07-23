@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'custom_auth',
     'money_management',
     'landing_page',
+    'budget_planning'
 ]
 
 MIDDLEWARE = [

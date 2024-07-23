@@ -1,4 +1,6 @@
+import json
 from django.core.paginator import Paginator
+from django.db.models import Sum
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.utils import timezone
@@ -115,7 +117,11 @@ def year_reports(request):
 def search_by_date(request):
     selected_date = request.GET.get('date', None)
     target_currency = request.GET.get('currency', 'USD')
-    transactions = Transaction.objects.filter(date=selected_date) if selected_date else Transaction.objects.all()
+
+    if selected_date:
+        transactions = Transaction.objects.filter(date=selected_date)
+    else:
+        transactions = Transaction.objects.none()
 
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         paginator = Paginator(transactions, 20)
@@ -125,10 +131,18 @@ def search_by_date(request):
             transactions_data = list(executor.map(lambda t: convert_transaction(t, target_currency), page_obj.object_list))
         return JsonResponse({
             'transactions': transactions_data,
-            'has_next': page_obj.has_next()
+            'has_next': page_obj.has_next(),
+            'next_page_number': page_obj.next_page_number() if page_obj.has_next() else None
         })
 
     page_obj, converted_transactions = get_paginated_transactions(transactions, request, target_currency)
+
+    # Prepare chart data
+    daily_totals = transactions.extra({'date_created': "DATE(created_at)"}).values('date_created').annotate(total_amount=Sum('amount')).order_by('date_created')
+    chart_data = {
+        'labels': [str(item['date_created']) for item in daily_totals],
+        'total': [float(item['total_amount']) for item in daily_totals]
+    }
 
     return render(request, 'reports/search_by_date.html', {
         'transactions': converted_transactions,
@@ -136,6 +150,7 @@ def search_by_date(request):
         'target_currency': target_currency,
         'selected_date': selected_date,
         'page_obj': page_obj,
+        'chart_data': json.dumps(chart_data),
     })
 
 
@@ -162,16 +177,25 @@ def search_transactions(request):
 
     page_obj, converted_transactions = get_paginated_transactions(transactions, request, target_currency)
 
+    # Prepare chart data
+    daily_totals = transactions.extra({'date_created': "DATE(created_at)"}).values('date_created').annotate(total_amount=Sum('amount')).order_by('date_created')
+    chart_data = {
+        'labels': [str(item['date_created']) for item in daily_totals],
+        'total': [float(item['total_amount']) for item in daily_totals]
+    }
+
     if request.headers.get('x-requested-with') == 'XMLHttpRequest':
         return JsonResponse({
             'transactions': converted_transactions,
-            'has_next': page_obj.has_next()
+            'has_next': page_obj.has_next(),
+            'next_page_number': page_obj.next_page_number() if page_obj.has_next() else None
         })
 
     return render(request, 'reports/search_transactions.html', {
         'form': form,
-        'transactions': page_obj,
-        'page_obj': page_obj,
+        'transactions': converted_transactions,
         'currency_choices': CURRENCY_CHOICES,
         'target_currency': target_currency,
+        'page_obj': page_obj,
+        'chart_data': json.dumps(chart_data),
     })

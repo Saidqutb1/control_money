@@ -19,6 +19,15 @@
                     <a class="dropdown-item" href="{% url 'search_transactions' %}">Поиск транзакций</a>
                 </div>
             </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'budget_planning:notifications' %}">Notifications</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'budget_planning:plan_list' %}">Plans</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'budget_planning:budget_list' %}">Budgets</a>
+            </li>
             {% if user.is_authenticated %}
                 <li class="nav-item">
                     <a class="nav-link" href="{% url 'logout' %}">Выйти</a>

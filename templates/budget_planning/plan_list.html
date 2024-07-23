@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+
+{% block title %}Plans{% endblock %}
+
+{% block content %}
+<h2>Plans</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Description</th>
+            <th>Amount</th>
+            <th>Due Date</th>
+            <th>Created At</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for plan in plans %}
+        <tr>
+            <td>{{ plan.title }}</td>
+            <td>{{ plan.description }}</td>
+            <td>{{ plan.amount }}</td>
+            <td>{{ plan.due_date }}</td>
+            <td>{{ plan.created_at }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<a href="{% url 'budget_planning:add_plan' %}" class="btn btn-primary">Add Plan</a>
+{% endblock %}

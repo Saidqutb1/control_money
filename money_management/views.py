@@ -1,4 +1,6 @@
 import logging
+from django.db.models import Sum
+from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import TransactionForm, AccountForm
 from .models import Transaction
@@ -89,10 +91,20 @@ def index(request):
         with ThreadPoolExecutor() as executor:
             converted_transactions = list(executor.map(lambda t: convert_transaction(t, target_currency), transactions))
 
+        today = timezone.now().date()
+        month_start = today.replace(day=1)
+        transactions_by_day = Transaction.objects.filter(date__gte=month_start).values('date').annotate(total_amount=Sum('amount'))
+
+        chart_data = {
+            'labels': [t['date'].strftime('%Y-%m-%d') for t in transactions_by_day],
+            'data': [float(t['total_amount']) for t in transactions_by_day]
+        }
+
         if request.headers.get('x-requested-with') == 'XMLHttpRequest':
             return JsonResponse({
                 'transactions': converted_transactions,
-                'has_next': page_obj.has_next()
+                'has_next': page_obj.has_next(),
+                'chart_data': chart_data
             })
 
         return render(request, 'money_management/index.html', {

@@ -4,16 +4,66 @@
 
 {% block content %}
 <h2>Найти отчеты по дате</h2>
-<form method="POST" action="{% url 'search_by_date' %}">
-    {% csrf_token %}
+<form method="GET" action="{% url 'search_by_date' %}" class="form-inline" style="float: right; margin-bottom: 10px;">
     <div class="form-group">
-        <label for="date">Выберите дату:</label>
-        <input type="date" class="form-control" id="date" name="date" required>
-        <input type="hidden" name="next" value="{{ request.path }}">
+        <label for="date">Дата:</label>
+        <input type="date" class="form-control ml-2" id="date" name="date" value="{{ selected_date }}">
+        <label for="currency" class="ml-2">Валюта:</label>
+        <select name="currency" class="form-control ml-2" id="currency">
+            {% for code, name in currency_choices %}
+                <option value="{{ code }}" {% if target_currency == code %}selected{% endif %}>{{ name }} ({{ code }})</option>
+            {% endfor %}
+        </select>
+        <button type="submit" class="btn btn-primary ml-2">Найти</button>
     </div>
-    <button type="submit" class="btn btn-primary">Найти</button>
 </form>
-{% if error %}
-    <div class="alert alert-danger mt-3">{{ error }}</div>
+<div style="clear: both;"></div>
+
+{% if transactions %}
+    <table class="table mt-4">
+        <thead>
+            <tr>
+                <th>Аккаунт</th>
+                <th>Тип</th>
+                <th>Прошлый баланс</th>
+                <th>Сумма</th>
+                <th>Нынешний баланс</th>
+                <th>Категория</th>
+                <th>Примечание</th>
+                <th>Дата и время</th>
+                <th>Действия</th>
+            </tr>
+        </thead>
+        <tbody id="transaction-table-body">
+            {% for transaction in transactions %}
+                <tr>
+                    <td>{{ transaction.account }}</td>
+                    <td>{{ transaction.type }}</td>
+                    <td>{{ transaction.previous_balance }} {{ target_currency }}</td>
+                    <td>{{ transaction.amount }} {{ target_currency }}</td>
+                    <td>{{ transaction.current_balance }} {{ target_currency }}</td>
+                    <td>{{ transaction.category }}</td>
+                    <td>{{ transaction.note }}</td>
+                    <td>{{ transaction.created_at }}</td>
+                    <td>
+                        <a href="{% url 'money_management:update_transaction' pk=transaction.id %}" class="btn btn-sm btn-primary">
+                            <i class="fas fa-pencil-alt"></i>
+                        </a>
+                        <a href="{% url 'money_management:delete_transaction' pk=transaction.id %}" class="btn btn-sm btn-danger">
+                            <i class="fas fa-trash"></i>
+                        </a>
+                    </td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if page_obj.has_next %}
+        <div class="text-center">
+            <button id="load-more" class="btn btn-secondary" data-next-page="{{ page_obj.next_page_number }}">Ещё</button>
+        </div>
+    {% endif %}
+{% else %}
+    <p>Нет транзакций за выбранную дату.</p>
 {% endif %}
 {% endblock %}

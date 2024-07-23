@@ -1,4 +1,3 @@
-<!-- reports/templates/reports/search_results.html -->
 {% extends 'base.html' %}
 {% load crispy_forms_tags %}
 {% block title %}Отчеты за {{ selected_date }}{% endblock %}
@@ -36,23 +35,17 @@
             <th>Действия</th>
         </tr>
     </thead>
-    <tbody>
+    <tbody id="transaction-table-body">
         {% for transaction in transactions %}
             <tr>
-                <td>{{ transaction.account.name }}</td>
+                <td>{{ transaction.account }}</td>
                 <td>{{ transaction.type }}</td>
                 <td>{{ transaction.previous_balance }} {{ target_currency }}</td>
                 <td>{{ transaction.amount }} {{ target_currency }}</td>
                 <td>{{ transaction.current_balance }} {{ target_currency }}</td>
                 <td>{{ transaction.category }}</td>
                 <td>{{ transaction.note }}</td>
-                <td>
-                    {% if transaction.updated_at %}
-                        {{ transaction.created_at }} (обновлено: {{ transaction.updated_at }})
-                    {% else %}
-                        {{ transaction.created_at }}
-                    {% endif %}
-                </td>
+                <td>{{ transaction.created_at }}</td>
                 <td>
                     <a href="{% url 'money_management:update_transaction' pk=transaction.id %}" class="btn btn-sm btn-primary">
                         <i class="fas fa-pencil-alt"></i>
@@ -65,4 +58,10 @@
         {% endfor %}
     </tbody>
 </table>
+
+{% if page_obj.has_next %}
+    <div class="text-center">
+        <button id="load-more" class="btn btn-secondary" data-next-page="{{ page_obj.next_page_number }}">Ещё</button>
+    </div>
+{% endif %}
 {% endblock %}

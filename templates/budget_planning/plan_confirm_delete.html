@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block title %}Удалить План{% endblock %}
+
+{% block content %}
+<h2>Удалить План</h2>
+<p>Вы уверены, что хотите удалить план "{{ object.title }}"?</p>
+<form method="post">{% csrf_token %}
+    <button type="submit" class="btn btn-danger">Удалить</button>
+    <a href="{% url 'budget_planning:plan_list' %}" class="btn btn-secondary">Отмена</a>
+</form>
+{% endblock %}

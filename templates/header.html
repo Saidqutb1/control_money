@@ -25,8 +25,15 @@
             <li class="nav-item">
                 <a class="nav-link" href="{% url 'budget_planning:plan_list' %}">Plans</a>
             </li>
-            <li class="nav-item">
-                <a class="nav-link" href="{% url 'budget_planning:budget_list' %}">Budgets</a>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" id="themeDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    Тема
+                </a>
+                <div class="dropdown-menu" aria-labelledby="themeDropdown">
+                    <a class="dropdown-item" href="#" onclick="setTheme('default')">Стандартная</a>
+                    <a class="dropdown-item" href="#" onclick="setTheme('night')">Ночная</a>
+                    <a class="dropdown-item" href="#" onclick="setTheme('sepia')">Сепия</a>
+                </div>
             </li>
             {% if user.is_authenticated %}
                 <li class="nav-item">

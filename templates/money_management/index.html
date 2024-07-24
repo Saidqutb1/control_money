@@ -96,60 +96,65 @@
 
 {% block extra_js %}
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('load-more').addEventListener('click', function() {
-        let nextPage = this.getAttribute('data-next-page');
-        let xhr = new XMLHttpRequest();
-        xhr.open('GET', `?page=${nextPage}`, true);
-        xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
-        xhr.onload = function() {
-            if (xhr.status >= 200 && xhr.status < 400) {
-                try {
-                    let response = JSON.parse(xhr.responseText);
-                    let transactionTableBody = document.getElementById('transaction-table-body');
+    const loadMoreButton = document.getElementById('load-more');
+    if (loadMoreButton) {
+        loadMoreButton.addEventListener('click', function() {
+            let nextPage = this.getAttribute('data-next-page');
+            let xhr = new XMLHttpRequest();
+            xhr.open('GET', `?page=${nextPage}`, true);
+            xhr.setRequestHeader('X-Requested-With', 'XMLHttpRequest');
+            xhr.onload = function() {
+                if (xhr.status >= 200 && xhr.status < 400) {
+                    try {
+                        let response = JSON.parse(xhr.responseText);
+                        let transactionTableBody = document.getElementById('transaction-table-body');
 
-                    response.transactions.forEach(function(transaction) {
-                        let newRow = transactionTableBody.insertRow();
-                        newRow.innerHTML = `
-                            <td>${transaction.account}</td>
-                            <td>${transaction.type}</td>
-                            <td>${transaction.previous_balance} ${transaction.currency}</td>
-                            <td>${transaction.amount} ${transaction.currency}</td>
-                            <td>${transaction.current_balance} ${transaction.currency}</td>
-                            <td>${transaction.category}</td>
-                            <td>${transaction.note}</td>
-                            <td>${transaction.created_at}</td>
-                            <td>
-                                <a href="/money_management/update_transaction/${transaction.id}/" class="btn btn-sm btn-primary">
-                                    <i class="fas fa-pencil-alt"></i>
-                                </a>
-                                <a href="/money_management/delete_transaction/${transaction.id}/" class="btn btn-sm btn-danger">
-                                    <i class="fas fa-trash"></i>
-                                </a>
-                            </td>`;
-                    });
+                        response.transactions.forEach(function(transaction) {
+                            let newRow = transactionTableBody.insertRow();
+                            newRow.innerHTML = `
+                                <td>${transaction.account}</td>
+                                <td>${transaction.type}</td>
+                                <td>${transaction.previous_balance} ${transaction.currency}</td>
+                                <td>${transaction.amount} ${transaction.currency}</td>
+                                <td>${transaction.current_balance} ${transaction.currency}</td>
+                                <td>${transaction.category}</td>
+                                <td>${transaction.note}</td>
+                                <td>${transaction.created_at}</td>
+                                <td>
+                                    <a href="/money_management/update_transaction/${transaction.id}/" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-pencil-alt"></i>
+                                    </a>
+                                    <a href="/money_management/delete_transaction/${transaction.id}/" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </td>`;
+                        });
 
-                    if (response.has_next) {
-                        document.getElementById('load-more').setAttribute('data-next-page', response.next_page_number);
-                    } else {
-                        document.getElementById('load-more').remove();
+                        if (response.has_next) {
+                            loadMoreButton.setAttribute('data-next-page', response.next_page_number);
+                        } else {
+                            loadMoreButton.remove();
+                        }
+                    } catch (e) {
+                        console.error('Error parsing JSON response:', e);
                     }
-                } catch (e) {
-                    console.error('Error parsing JSON response:', e);
+                } else {
+                    console.error('Error loading more transactions:', xhr.statusText);
                 }
-            } else {
-                console.error('Error loading more transactions:', xhr.statusText);
-            }
-        };
-        xhr.onerror = function() {
-            console.error('Request failed');
-        };
-        xhr.send();
-    });
+            };
+            xhr.onerror = function() {
+                console.error('Request failed');
+            };
+            xhr.send();
+        });
+    }
 
     const ctx = document.getElementById('transactionChart').getContext('2d');
-    const chartData = {{ chart_data|safe }};
+    const chartData = JSON.parse('{{ chart_data|escapejs }}');
+    console.log(chartData);  // Debugging line
     const transactionChart = new Chart(ctx, {
         type: '{{ chart_type }}',
         data: {

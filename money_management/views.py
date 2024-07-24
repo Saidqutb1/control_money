@@ -5,12 +5,13 @@ from django.utils import timezone
 from django.shortcuts import render, redirect, get_object_or_404
 from .forms import TransactionForm, AccountForm
 from .models import Transaction, Account
-from budget_planning.models import Budget, Notification
+from budget_planning.models import  Notification, Plan
 from .utils import convert_currency
 from .forms import CURRENCY_CHOICES
 from concurrent.futures import ThreadPoolExecutor
 from django.core.paginator import Paginator
 from django.http import JsonResponse
+
 
 logger = logging.getLogger(__name__)
 def convert_transaction(transaction, target_currency):
@@ -63,6 +64,7 @@ def add_account(request):
         form = AccountForm()
     return render(request, 'money_management/add_account.html', {'form': form, 'next': next_url})
 
+
 def update_transaction(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk)
     if request.method == 'POST':
@@ -73,6 +75,7 @@ def update_transaction(request, pk):
     else:
         form = TransactionForm(instance=transaction)
     return render(request, 'money_management/update_transaction.html', {'form': form})
+
 
 def delete_transaction(request, pk):
     transaction = get_object_or_404(Transaction, pk=pk)
@@ -100,10 +103,10 @@ def index(request):
         with ThreadPoolExecutor() as executor:
             converted_transactions = list(executor.map(lambda t: convert_transaction(t, target_currency), page_obj))
 
-        date_field = 'date_created'
-        daily_totals = transactions.extra({'date_created': "DATE(created_at)"}).values(date_field).annotate(total_amount=Sum('amount')).order_by(date_field)
-        income_totals = transactions.filter(type='Income').extra({'date_created': "DATE(created_at)"}).values(date_field).annotate(total_amount=Sum('amount')).order_by(date_field)
-        expense_totals = transactions.filter(type='Expense').extra({'date_created': "DATE(created_at)"}).values(date_field).annotate(total_amount=Sum('amount')).order_by(date_field)
+        date_field = 'date'
+        daily_totals = transactions.extra({'date': "DATE(created_at)"}).values(date_field).annotate(total_amount=Sum('amount')).order_by(date_field)
+        income_totals = transactions.filter(type='Income').extra({'date': "DATE(created_at)"}).values(date_field).annotate(total_amount=Sum('amount')).order_by(date_field)
+        expense_totals = transactions.filter(type='Expense').extra({'date': "DATE(created_at)"}).values(date_field).annotate(total_amount=Sum('amount')).order_by(date_field)
 
         chart_data = {
             'labels': [str(item[date_field]) for item in daily_totals],
@@ -139,14 +142,30 @@ def index(request):
 def check_budget(transaction):
     account = transaction.account
     user = account.user
-    budgets = Budget.objects.filter(user=user, category=transaction.category)
+    category = transaction.category
+
+    budgets = Plan.objects.filter(user=user, category=category)
     if budgets.exists():
         budget = budgets.first()
-        total_expenses = Transaction.objects.filter(account__user=user, category=transaction.category).aggregate(Sum('amount'))['amount__sum'] or 0
-        if total_expenses + transaction.amount > budget.limit:
+        total_expenses = Transaction.objects.filter(
+            account__user=user, category=category
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        if budget.limit is not None and total_expenses + transaction.amount > budget.limit:
             Notification.create_notification(
                 user=user,
-                message=f'You have exceeded your budget for {transaction.category}.'
+                message=f'Вы превысили бюджет для {category}.'
             )
+            budget.is_completed = True
+            budget.save()
 
-
+    plans = Plan.objects.filter(user=user)
+    for plan in plans:
+        total_expenses = Transaction.objects.filter(
+            account__user=user
+        ).aggregate(total=Sum('amount'))['total'] or 0
+        if total_expenses >= plan.amount:
+            plan.is_completed = True
+            plan.save()
+        elif plan.due_date < timezone.now().date():
+            plan.is_failed = True
+            plan.save()

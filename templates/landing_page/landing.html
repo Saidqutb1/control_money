@@ -4,12 +4,19 @@
     <meta charset="UTF-8">
     <title>Добро пожаловать!</title>
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/5.0.0-alpha1/css/bootstrap.min.css">
+    <style>
+        .full-height {
+            height: 100vh;
+        }
+    </style>
 </head>
 <body>
-    <div class="container text-center">
-        <h1>Добро пожаловать!</h1>
-        <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#loginModal">Войти</button>
-        <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#registerModal">Регистрация</button>
+    <div class="container d-flex align-items-center justify-content-center full-height text-center">
+        <div>
+            <h1>Добро пожаловать!</h1>
+            <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#loginModal">Войти</button>
+            <button type="button" class="btn btn-secondary" data-toggle="modal" data-target="#registerModal">Регистрация</button>
+        </div>
     </div>
 
     <div class="modal fade" id="loginModal" tabindex="-1" aria-labelledby="loginModalLabel" aria-hidden="true">

@@ -4,9 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}My Site{% endblock %}</title>
+    {% load static %}
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     {% block extra_css %}{% endblock %}
+    <script>
+        document.addEventListener('DOMContentLoaded', (event) => {
+            const theme = localStorage.getItem('theme') || 'default';
+            setTheme(theme);
+        });
+
+        function setTheme(theme) {
+            document.body.className = `${theme}-theme`;
+            localStorage.setItem('theme', theme);
+        }
+    </script>
 </head>
 <body>
     {% load crispy_forms_tags %}

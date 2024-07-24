@@ -1,30 +1,45 @@
 {% extends 'base.html' %}
-
-{% block title %}Plans{% endblock %}
+{% block title %}Планы{% endblock %}
 
 {% block content %}
-<h2>Plans</h2>
+<h2>Планы</h2>
 <table class="table">
     <thead>
         <tr>
-            <th>Title</th>
-            <th>Description</th>
-            <th>Amount</th>
-            <th>Due Date</th>
-            <th>Created At</th>
+            <th>Аккаунт</th>
+            <th>Тип</th>
+            <th>Сумма</th>
+            <th>Категория</th>
+            <th>Примечание</th>
+            <th>Дата и время</th>
+            <th>Статус</th>
+            <th>Удалить</th>
         </tr>
     </thead>
     <tbody>
-        {% for plan in plans %}
+        {% for plan in object_list %}
         <tr>
-            <td>{{ plan.title }}</td>
-            <td>{{ plan.description }}</td>
+            <td>{{ plan.account.name }}</td>
+            <td>{{ plan.get_type_display }}</td>
             <td>{{ plan.amount }}</td>
+            <td>{{ plan.category }}</td>
+            <td>{{ plan.note }}</td>
             <td>{{ plan.due_date }}</td>
-            <td>{{ plan.created_at }}</td>
+            <td>
+                {% if plan.is_completed %}
+                    Выполнено
+                {% elif plan.is_failed %}
+                    Не выполнено вовремя
+                {% else %}
+                    Активно
+                {% endif %}
+            </td>
+            <td>
+                <a href="{% url 'budget_planning:delete_plan' plan.id %}" class="btn btn-danger">Удалить</a>
+            </td>
         </tr>
         {% endfor %}
     </tbody>
 </table>
-<a href="{% url 'budget_planning:add_plan' %}" class="btn btn-primary">Add Plan</a>
+<a href="{% url 'budget_planning:add_plan' %}" class="btn btn-primary">Добавить План</a>
 {% endblock %}

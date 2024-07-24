@@ -1,0 +1,14 @@
+body {
+    background-color: white;
+    color: black;
+}
+
+body.night-theme {
+    background-color: black;
+    color: white;
+}
+
+body.sepia-theme {
+    background-color: #f4ecd8;
+    color: #5b4636;
+}

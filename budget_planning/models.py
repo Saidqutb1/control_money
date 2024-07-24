@@ -1,29 +1,33 @@
 from django.db import models
 from django.contrib.auth import get_user_model
 from django.utils import timezone
+from money_management.models import Account, Transaction
 
 User = get_user_model()
 
+PLAN_TYPE_CHOICES = (
+    ('income', 'Доход'),
+    ('expense', 'Расход'),
+)
 
-class Budget(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
-    category = models.CharField(max_length=100)
-    limit = models.DecimalField(max_digits=30, decimal_places=2)
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f'{self.user.username} - {self.category} - {self.limit}'
 
 class Plan(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    title = models.CharField(max_length=100)
-    description = models.TextField()
+    account = models.ForeignKey(Account, on_delete=models.CASCADE)
+    type = models.CharField(max_length=20, choices=PLAN_TYPE_CHOICES)
     amount = models.DecimalField(max_digits=10, decimal_places=2)
-    due_date = models.DateField()
-    created_at = models.DateTimeField(auto_now_add=True)
+    category = models.CharField(max_length=50)
+    note = models.TextField(blank=True, null=True)
+    due_date = models.DateTimeField()
+    is_completed = models.BooleanField(default=False)
+    is_failed = models.BooleanField(default=False)
+    previous_balance = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
+    current_balance = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    limit = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     def __str__(self):
-        return self.title
+        return f'{self.category} - {self.amount}'
+
 
 class Notification(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
